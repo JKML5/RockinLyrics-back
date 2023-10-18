@@ -19,4 +19,14 @@ mongoose.connect(config.database.connectionString,
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
+const Song = require('./models/song');
+
+// Get all songs
+app.get('/api/song', (req, res, next) => {
+  Song.find()
+    .populate('tutorials')
+    .then(songs => res.status(200).json(songs))
+    .catch(error => res.status(400).json({ error }));
+});
+
 module.exports = app;
