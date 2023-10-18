@@ -29,4 +29,11 @@ app.get('/api/song', (req, res, next) => {
     .catch(error => res.status(400).json({ error }));
 });
 
+// Get a specific song
+app.get('/api/song/:id', (req, res, next) => {
+  Song.findOne({ _id: req.params.id })
+    .then(song => res.status(200).json(song))
+    .catch(error => res.status(404).json({ error }));
+});
+
 module.exports = app;
