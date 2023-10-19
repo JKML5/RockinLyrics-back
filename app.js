@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 
 const app = express();
 
+app.use(express.json());
+
 // Fix CORS errors
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,6 +36,24 @@ app.get('/api/song/:id', (req, res, next) => {
   Song.findOne({ _id: req.params.id })
     .then(song => res.status(200).json(song))
     .catch(error => res.status(404).json({ error }));
+});
+
+// Add a song
+app.post('/api/song', (req, res, next) => {
+  delete req.body._id;
+  const song = new Song({
+    ...req.body
+  });
+  song.save()
+    .then(() => res.status(201).json({ message: 'New song added!'}))
+    .catch(error => res.status(400).json({ error }));
+});
+
+// Edit a song
+app.put('/api/song/:id', (req, res, next) => {
+  Song.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+    .then(() => res.status(200).json({ message: 'Song edited !'}))
+    .catch(error => res.status(400).json({ error }));
 });
 
 module.exports = app;
