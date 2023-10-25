@@ -56,4 +56,72 @@ app.put('/api/song/:id', (req, res, next) => {
     .catch(error => res.status(400).json({ error }));
 });
 
+// Add a tutorial to a song
+app.post('/api/song/:id', (req, res, next) => {
+  delete req.body._id;
+
+  Song.findOne({ _id: req.params.id })
+    .then((song) => {
+      if (!song) {
+        return res.status(404).json({ message: 'Chanson non trouvée' });
+      }
+
+      song.tutorials.push(req.body);
+
+      return song.save()
+        .then(() => res.status(201).json({ message: 'Tutoriel ajouté à la chanson avec succès', status: 201 }));
+    })
+    .catch(error => res.status(400).json({ error }));
+});
+
+// Edit a tutorial in a song
+app.put('/api/song/:id/:tutorialId', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+    const tutorialId = req.params.tutorialId;
+
+    const updateFields = {
+      'tutorials.$': {
+        type: req.body.type,
+        title: req.body.title,
+        googleId: req.body.googleId,
+        lyrics: req.body.lyrics,
+        categories: req.body.categories,
+        gender: req.body.gender,
+      },
+    };
+
+    const result = await Song.updateOne(
+      { _id: songId, 'tutorials._id': tutorialId },
+      { $set: updateFields }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ message: 'Tutoriel modifié !' });
+    } else {
+      res.status(404).json({ message: 'Tutoriel non trouvé ou aucune modification effectuée.' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Remove a tutorial from a song
+app.delete('/api/song/:id/:tutorialId', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+    const tutorialId = req.params.tutorialId;
+
+    const result = await Song.updateOne(
+      { _id: songId },
+      { $pull: { tutorials: { _id: tutorialId } } }
+    );
+
+    res.status(200).json({ message: 'Tutoriel supprimé avec succès.' });
+
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = app;
