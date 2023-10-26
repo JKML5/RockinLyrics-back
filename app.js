@@ -56,6 +56,13 @@ app.put('/api/song/:id', (req, res, next) => {
     .catch(error => res.status(400).json({ error }));
 });
 
+// Delete a song
+app.delete('/api/song/:id', (req, res, next) => {
+  Song.deleteOne({ _id: req.params.id })
+    .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
+    .catch(error => res.status(400).json({ error }));
+});
+
 // Add a tutorial to a song
 app.post('/api/song/:id', (req, res, next) => {
   delete req.body._id;
