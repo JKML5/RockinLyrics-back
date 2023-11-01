@@ -131,4 +131,72 @@ app.delete('/api/song/:id/:tutorialId', async (req, res, next) => {
   }
 });
 
+// Move UP a tutorial
+app.put('/api/song/:id/move-up/:tutorialId', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+    const tutorialId = req.params.tutorialId;
+
+    const song = await Song.findOne({ _id: songId });
+
+    if (!song) {
+      return res.status(404).json({ message: 'Chanson non trouvée' });
+    }
+
+    const tutorialIndex = song.tutorials.findIndex(tutorial => tutorial._id == tutorialId);
+
+    if (tutorialIndex === -1) {
+      return res.status(404).json({ message: 'Tutoriel non trouvé' });
+    }
+
+    if (tutorialIndex > 0) {
+      // Swap the positions of the current tutorial and the one above it
+      const temp = song.tutorials[tutorialIndex];
+      song.tutorials[tutorialIndex] = song.tutorials[tutorialIndex - 1];
+      song.tutorials[tutorialIndex - 1] = temp;
+
+      await song.save();
+      res.status(200).json({ message: 'Tutoriel déplacé vers le haut avec succès' });
+    } else {
+      res.status(400).json({ message: 'Impossible de monter davantage' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Move DOWN a tutorial
+app.put('/api/song/:id/move-down/:tutorialId', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+    const tutorialId = req.params.tutorialId;
+
+    const song = await Song.findOne({ _id: songId });
+
+    if (!song) {
+      return res.status(404).json({ message: 'Chanson non trouvée' });
+    }
+
+    const tutorialIndex = song.tutorials.findIndex(tutorial => tutorial._id == tutorialId);
+
+    if (tutorialIndex === -1) {
+      return res.status(404).json({ message: 'Tutoriel non trouvé' });
+    }
+
+    if (tutorialIndex < song.tutorials.length - 1) {
+      // Swap the positions of the current tutorial and the one below it
+      const temp = song.tutorials[tutorialIndex];
+      song.tutorials[tutorialIndex] = song.tutorials[tutorialIndex + 1];
+      song.tutorials[tutorialIndex + 1] = temp;
+
+      await song.save();
+      res.status(200).json({ message: 'Tutoriel déplacé vers le bas avec succès' });
+    } else {
+      res.status(400).json({ message: 'Impossible de descendre davantage' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = app;
