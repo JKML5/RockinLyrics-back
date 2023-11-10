@@ -21,7 +21,7 @@ mongoose.connect(config.database.connectionString,
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
-const Song = require('./models/song');
+const Song = require('./models/Song');
 
 // Get all songs
 app.get('/api/song', (req, res, next) => {
