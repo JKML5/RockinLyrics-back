@@ -5,6 +5,7 @@ const songSchema = mongoose.Schema({
   title: { type: String, required: true },
   artist: { type: String, required: true },
   tutorials: [tutorialSchema],
+  order: { type: Number, required: true, unique: true },
 });
 
 // Index unique pour les champs "title" et "artist"

@@ -27,6 +27,7 @@ const Song = require('./models/Song');
 app.get('/api/song', (req, res, next) => {
   Song.find()
     .populate('tutorials')
+    .sort({ order: 1 })
     .then(songs => res.status(200).json(songs))
     .catch(error => res.status(400).json({ error }));
 });
@@ -39,14 +40,23 @@ app.get('/api/song/:id', (req, res, next) => {
 });
 
 // Add a song
-app.post('/api/song', (req, res, next) => {
-  delete req.body._id;
-  const song = new Song({
-    ...req.body
-  });
-  song.save()
-    .then(() => res.status(201).json({ message: 'New song added!'}))
-    .catch(error => res.status(400).json({ error }));
+app.post('/api/song', async (req, res, next) => {
+  try {
+    const songCount = await Song.countDocuments();
+
+    delete req.body._id;
+
+    const song = new Song({
+      ...req.body,
+      order: songCount + 1
+    });
+
+    await song.save();
+    res.status(201).json({ message: 'New song added!' });
+
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Edit a song
@@ -62,6 +72,73 @@ app.delete('/api/song/:id', (req, res, next) => {
     .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
     .catch(error => res.status(400).json({ error }));
 });
+
+// Move UP a song
+app.put('/api/song/move-up/:id', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+
+    const songToMove = await Song.findOne({ _id: songId });
+    if (!songToMove) {
+      return res.status(404).json({ message: 'Chanson non trouvée' });
+    }
+
+    const songAbove = await Song.findOne({ order: songToMove.order - 1 });
+    if (!songAbove) {
+      return res.status(400).json({ message: 'Impossible de monter davantage' });
+    }
+
+    const oldSongToMoveOrder = songToMove.order;
+    const oldSongAboveOrder = songAbove.order;
+
+    songAbove.order = -1;
+    await songAbove.save();
+  
+    songToMove.order = oldSongAboveOrder;
+    await songToMove.save();
+  
+    songAbove.order = oldSongToMoveOrder;
+    await songAbove.save();
+
+    res.status(200).json({ message: 'Chanson déplacée vers le haut avec succès' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Move DOWN a song
+app.put('/api/song/move-down/:id', async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+
+    const songToMove = await Song.findOne({ _id: songId });
+    if (!songToMove) {
+      return res.status(404).json({ message: 'Chanson non trouvée' });
+    }
+
+    const songBelow = await Song.findOne({ order: songToMove.order + 1 });
+    if (!songBelow) {
+      return res.status(400).json({ message: 'Impossible de descendre davantage' });
+    }
+
+    const oldSongToMoveOrder = songToMove.order;
+    const oldSongBelowOrder = songBelow.order;
+
+    songBelow.order = -1;
+    await songBelow.save();
+  
+    songToMove.order = oldSongBelowOrder;
+    await songToMove.save();
+  
+    songBelow.order = oldSongToMoveOrder;
+    await songBelow.save();
+
+    res.status(200).json({ message: 'Chanson déplacée vers le bas avec succès' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 
 // Add a tutorial to a song
 app.post('/api/song/:id', (req, res, next) => {
