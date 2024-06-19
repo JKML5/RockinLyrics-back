@@ -6,7 +6,7 @@ const tutorialSchema = mongoose.Schema({
   googleId: { type: String, required: true },
   lyrics: { type: String },
   categories: [{ type: String }],
-  gender: { type: String, enum: ['M', 'F'] },
+  gender: { type: String, enum: ['M', 'F', ''], },
 });
 
 tutorialSchema.index({ title: 1 }, { unique: true });

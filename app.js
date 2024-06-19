@@ -165,19 +165,19 @@ app.put('/api/song/:id/:tutorialId', async (req, res, next) => {
     const tutorialId = req.params.tutorialId;
 
     const updateFields = {
-      'tutorials.$': {
-        type: req.body.type,
-        title: req.body.title,
-        googleId: req.body.googleId,
-        lyrics: req.body.lyrics,
-        categories: req.body.categories,
-        gender: req.body.gender,
+      $set: {
+        'tutorials.$.type': req.body.type,
+        'tutorials.$.title': req.body.title,
+        'tutorials.$.googleId': req.body.googleId,
+        'tutorials.$.lyrics': req.body.lyrics,
+        'tutorials.$.categories': req.body.categories,
+        'tutorials.$.gender': req.body.gender,
       },
     };
 
     const result = await Song.updateOne(
       { _id: songId, 'tutorials._id': tutorialId },
-      { $set: updateFields }
+      updateFields
     );
 
     if (result.modifiedCount > 0) {
