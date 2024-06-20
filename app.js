@@ -22,6 +22,7 @@ mongoose.connect(config.database.connectionString,
   .catch((err) => console.error(err));
 
 const Song = require('./models/Song');
+const Concert = require('./models/Concert');
 
 // Get all songs
 app.get('/api/song', (req, res, next) => {
@@ -60,10 +61,29 @@ app.post('/api/song', async (req, res, next) => {
 });
 
 // Edit a song
-app.put('/api/song/:id', (req, res, next) => {
-  Song.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: 'Song edited !'}))
-    .catch(error => res.status(400).json({ error }));
+app.put('/api/song/:id', async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    // Vérification de la validité de l'ID (par exemple, s'il est en hexadécimal)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid song ID' });
+    }
+
+    const updatedSong = await Song.findByIdAndUpdate(
+      id,
+      { ...req.body, _id: id }, // Met à jour les champs requis
+      { new: true } // Retourne le document mis à jour
+    );
+
+    if (!updatedSong) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    res.status(200).json({ message: 'Song edited!', song: updatedSong });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Delete a song
@@ -275,5 +295,95 @@ app.put('/api/song/:id/move-down/:tutorialId', async (req, res, next) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+/*
+* CONCERTS
+*/
+
+// Get all concerts
+app.get('/api/concert', async (req, res, next) => {
+  try {
+    const concerts = await Concert.find({}, 'name slug').exec();
+    res.status(200).json(concerts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get a specific concert by ID
+app.get('/api/concert/:id', (req, res, next) => {
+  const { id } = req.params;
+
+  // Vérification de la validité de l'ID (par exemple, s'il est en hexadécimal)
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid concert ID' });
+  }
+
+  Concert.findById(id)
+    .then((concert) => {
+      if (!concert) {
+        return res.status(404).json({ error: 'Concert not found' });
+      }
+      res.status(200).json(concert);
+    })
+    .catch((error) => res.status(500).json({ error: error.message }));
+});
+
+// Add a concert
+app.post('/api/concert', async (req, res, next) => {
+  try {
+    const { name, slug, date, songs } = req.body;
+
+    if (!name || !slug ) {
+      return res.status(400).json({ error: 'Name and slug are required' });
+    }
+
+    const concert = new Concert({
+      name,
+      slug,
+      date,
+      songs
+    });
+
+    await concert.save();
+
+    res.status(201).json({ message: 'New concert added!', concert });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Edit a concert
+app.put('/api/concert/:id', async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid concert ID' });
+  }
+
+  const { name, slug, date, songs } = req.body;
+
+  if (!name || !slug) {
+    return res.status(400).json({ error: 'Name and slug are required' });
+  }
+
+  try {
+    const updatedConcert = await Concert.findByIdAndUpdate(
+      id,
+      { name, slug, date, songs },
+      { new: true } // Pour renvoyer le concert mis à jour plutôt que l'ancien
+    );
+
+    if (!updatedConcert) {
+      return res.status(404).json({ error: 'Concert not found' });
+    }
+
+    res.status(200).json({ message: 'Concert updated successfully', concert: updatedConcert });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
 
 module.exports = app;
