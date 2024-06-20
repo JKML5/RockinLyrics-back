@@ -19,7 +19,7 @@ mongoose.connect(config.database.connectionString,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+  .catch((err) => console.error(err));
 
 const Song = require('./models/Song');
 
@@ -179,7 +179,7 @@ app.put('/api/song/:id/:tutorialId', async (req, res, next) => {
       { _id: songId, 'tutorials._id': tutorialId },
       updateFields
     );
-
+    
     if (result.modifiedCount > 0) {
       res.status(200).json({ message: 'Tutoriel modifié !' });
     } else {
