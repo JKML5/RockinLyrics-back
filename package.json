@@ -1,5 +1,5 @@
 {
-  "name": "rockinlyrics-back",
+  "name": "rockin-lyrics-back",
   "version": "1.0.0",
   "description": "Project to learn NodeJS",
   "main": "server.js",
