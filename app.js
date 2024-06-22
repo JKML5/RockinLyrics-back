@@ -24,13 +24,20 @@ mongoose.connect(config.database.connectionString,
 const Song = require('./models/Song');
 const Concert = require('./models/Concert');
 
-// Get all songs
-app.get('/api/song', (req, res, next) => {
-  Song.find()
-    .populate('tutorials')
-    .sort({ order: 1 })
-    .then(songs => res.status(200).json(songs))
-    .catch(error => res.status(400).json({ error }));
+// Get all songs or public songs based on query parameter
+app.get('/api/song', async (req, res, next) => {
+  try {
+    const isPublic = req.query.public === 'true';
+    const query = isPublic ? { public: true } : {};
+
+    const songs = await Song.find(query)
+      .populate('tutorials')
+      .exec();
+
+    res.status(200).json(songs);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Get a specific song
@@ -311,22 +318,46 @@ app.get('/api/concert', async (req, res, next) => {
 });
 
 // Get a specific concert by ID
-app.get('/api/concert/:id', (req, res, next) => {
-  const { id } = req.params;
+app.get('/api/concert/:id', async(req, res, next) => {
+  try {
+    const { idConcert } = req.params;
 
-  // Vérification de la validité de l'ID (par exemple, s'il est en hexadécimal)
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'Invalid concert ID' });
+    if (!mongoose.Types.ObjectId.isValid(idConcert)) {
+      return res.status(400).json({ error: 'Invalid concert ID' });
+    }
+
+    const concert = await Concert.findById(idConcert);
+    if (!concert) {
+      return res.status(404).json({ error: 'Concert not found' });
+    }
+  
+    const songs = await Song.find({ concerts: idConcert })
+      .populate('tutorials')
+      .exec();
+  
+    res.status(200).json(songs);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
+});
 
-  Concert.findById(id)
-    .then((concert) => {
-      if (!concert) {
-        return res.status(404).json({ error: 'Concert not found' });
-      }
-      res.status(200).json(concert);
-    })
-    .catch((error) => res.status(500).json({ error: error.message }));
+// Get a specific concert by slug
+app.get('/api/concert/slug/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+  
+    const concert = await Concert.findOne({ slug })
+      .populate('songs')
+      .exec();
+    
+    if (!concert) {
+      return res.status(404).json({ error: 'Concert not found' });
+    }
+
+    res.status(200).json(concert);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Add a concert

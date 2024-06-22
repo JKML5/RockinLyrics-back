@@ -5,7 +5,7 @@ const concertSchema = new Schema({
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
   date: { type: Date },
-  songs: [{ type: Schema.Types.ObjectId, ref: 'Song' }] 
+  songs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Song' }] 
 });
 
 // Index unique pour le champ "slug"

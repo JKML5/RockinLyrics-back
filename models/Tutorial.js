@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const tutorialSchema = mongoose.Schema({
+const tutorialSchema = new Schema({
   type: { type: String, required: true },
   title: { type: String, required: true },
   googleId: { type: String, required: true },
@@ -10,6 +11,5 @@ const tutorialSchema = mongoose.Schema({
 });
 
 tutorialSchema.index({ title: 1 }, { unique: true });
-tutorialSchema.index({ googleId: 1 }, { unique: true });
 
 module.exports = tutorialSchema;

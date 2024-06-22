@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const tutorialSchema = require('./Tutorial');
 
-const songSchema = mongoose.Schema({
+const { Schema } = mongoose;
+
+const songSchema = new Schema({
   title: { type: String, required: true },
   artist: { type: String, required: true },
   tutorials: [tutorialSchema],
