@@ -195,7 +195,7 @@ app.put('/api/song/:id/:tutorialId', async (req, res, next) => {
       $set: {
         'tutorials.$.type': req.body.type,
         'tutorials.$.title': req.body.title,
-        'tutorials.$.googleId': req.body.googleId,
+        'tutorials.$.url': req.body.url,
         'tutorials.$.lyrics': req.body.lyrics,
         'tutorials.$.categories': req.body.categories,
         'tutorials.$.gender': req.body.gender,
@@ -320,22 +320,18 @@ app.get('/api/concert', async (req, res, next) => {
 // Get a specific concert by ID
 app.get('/api/concert/:id', async(req, res, next) => {
   try {
-    const { idConcert } = req.params;
+    const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(idConcert)) {
-      return res.status(400).json({ error: 'Invalid concert ID' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid concert ID : ' + id });
     }
 
-    const concert = await Concert.findById(idConcert);
+    const concert = await Concert.findById(id);
     if (!concert) {
       return res.status(404).json({ error: 'Concert not found' });
     }
-  
-    const songs = await Song.find({ concerts: idConcert })
-      .populate('tutorials')
-      .exec();
-  
-    res.status(200).json(songs);
+
+    res.status(200).json(concert);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
